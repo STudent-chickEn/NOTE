@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Note App</title>
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #editor {
+      flex: 3;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+    #editor textarea {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #editor button {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #editor button:hover {
+      background-color: #45a049;
+    }
+
+    #library {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    .note {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    .note span {
+      flex: 1;
+      margin-right: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .note button {
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .note button:hover {
+      background-color: darkred;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor">
+    <h2>Note Editor</h2>
+    <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+    <button onclick="saveNote()">Save Note</button>
+  </div>
+  <div id="library">
+    <h2>Saved Notes</h2>
+  </div>
+
+  <script>
+    // Load notes from localStorage
+    function loadNotes() {
+      const savedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+      savedNotes.forEach(note => {
+        addNoteToLibrary(note.id, note.content);
+      });
+    }
+
+    // Save a note
+    function saveNote() {
+      const noteContent = document.getElementById('noteContent').value.trim();
+      if (!noteContent) {
+        alert('Please write something before saving.');
+        return;
+      }
+
+      // Create a unique ID for the note
+      const noteId = `note-${Date.now()}`;
+
+      // Add note to localStorage
+      const savedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+      savedNotes.push({ id: noteId, content: noteContent });
+      localStorage.setItem('notes', JSON.stringify(savedNotes));
+
+      // Add note to the library
+      addNoteToLibrary(noteId, noteContent);
+
+      // Clear editor
+      document.getElementById('noteContent').value = '';
+    }
+
+    // Add a note element to the library
+    function addNoteToLibrary(noteId, noteContent) {
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.setAttribute('data-id', noteId);
+
+      const noteText = document.createElement('span');
+      noteText.textContent = noteContent;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'x';
+      deleteButton.onclick = (e) => {
+        e.stopPropagation(); // Prevent triggering the click on the note
+        deleteNote(noteId);
+      };
+
+      note.appendChild(noteText);
+      note.appendChild(deleteButton);
+
+      // Add click event to display note content
+      note.onclick = () => {
+        document.getElementById('noteContent').value = noteContent;
+      };
+
+      // Append to library
+      document.getElementById('library').appendChild(note);
+    }
+
+    // Delete a note from the library and localStorage
+    function deleteNote(noteId) {
+      const savedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+      const updatedNotes = savedNotes.filter(note => note.id !== noteId);
+      localStorage.setItem('notes', JSON.stringify(updatedNotes));
+
+      // Remove note element from the DOM
+      const noteElement = document.querySelector(`.note[data-id='${noteId}']`);
+      if (noteElement) noteElement.remove();
+    }
+
+    // Initialize the app
+    loadNotes();
+  </script>
+</body>
+</html>
